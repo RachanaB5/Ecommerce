@@ -423,3 +423,117 @@
         }
     </style>
 </head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <a href="/" class="logo">CurioCart</a>
+            <nav class="nav-links">
+                <a href="/">Home</a>
+                <a href="/products">Products</a>
+                {% if current_user.is_authenticated %}
+                    <a href="/cart">Cart</a>
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="/logout">Logout</a>
+                {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="product-page-container">
+        <h1 class="page-title">Our Products</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="padding: 1rem; margin-bottom: 1rem; border-radius: 4px; background-color: {% if category == 'error' %}#fecaca{% else %}#dcfce7{% endif %};">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if error %}
+            <div class="alert alert-error" style="padding: 1rem; margin-bottom: 1rem; border-radius: 4px; background-color: #fecaca;">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <div class="products-grid">
+            {% if products %}
+                {% for product in products %}
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <div class="product-image" style="background-image: url('{{ url_for('static', filename='images/' + product.image) if product.image else url_for('static', filename='images/default.jpg') }}')"></div>
+                            {% if product.discount and product.discount > 0 %}
+                                <div class="discount-badge">-{{ product.discount }}%</div>
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">{{ product.name }}</h3>
+                            <p class="product-description">{{ product.description }}</p>
+                            <div class="price-container">
+                                {% if product.discount and product.discount > 0 %}
+                                    <span class="original-price">₹{{ "%.2f"|format(product.price) }}</span>
+                                    <span class="discounted-price">₹{{ "%.2f"|format(product.price * (1 - product.discount/100)) }}</span>
+                                {% else %}
+                                    <span class="product-price">₹{{ "%.2f"|format(product.price) }}</span>
+                                {% endif %}
+                            </div>
+                            {% if current_user.is_authenticated %}
+                                <form class="add-to-cart-form" action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                                    <button type="submit" class="add-to-cart">Add to Cart</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-products" style="text-align: center; padding: 2rem; grid-column: 1/-1;">
+                    <p>No products available at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <div class="fab-container">
+        {% if current_user.is_authenticated %}
+        <a href="/cart" class="fab fab-primary">
+            <i class="fas fa-shopping-cart"></i>
+            {% if cart_count %}
+            <span class="fab-badge">{{ cart_count }}</span>
+            {% endif %}
+        </a>
+        {% endif %}
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <a href="/">Home</a>
+                <a href="/products">Products</a>
+                <a href="/about">About Us</a>
+                <a href="/contact">Contact</a>
+            </div>
+            <div class="footer-column">
+                <h3>Categories</h3>
+                <a href="/category/Electronics">Electronics</a>
+                <a href="/category/Gadgets">Gadgets</a>
+                <a href="/category/Books">Books</a>
+            </div>
+            <div class="footer-column">
+                <h3>Customer Service</h3>
+                <a href="/shipping">Shipping Info</a>
+                <a href="/returns">Returns</a>
+                <a href="/faq">FAQ</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 CurioCart. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
