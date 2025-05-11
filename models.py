@@ -1,39 +1,45 @@
 from extensions import db
-from datetime import datetime
 from flask_login import UserMixin
+from datetime import datetime
+from decimal import Decimal
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'  # Match existing table name
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)  # Changed from 'name'
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    phone = db.Column(db.String(15), nullable=True)
-    password_hash = db.Column(db.String(256), nullable=False)
-    _is_admin = db.Column('is_admin', db.Boolean, default=False)
-    reviews = db.relationship('Review', backref='user', lazy=True)
-    orders = db.relationship('Order', backref='user', lazy=True)
+    username = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    phone = db.Column(db.String(15))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_admin = db.Column(db.Boolean, default=False)
 
-    @property
-    def is_admin(self):
-        return self._is_admin
+    def __init__(self, username, email, password_hash, phone=None, is_admin=False):
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+        self.phone = phone
+        self.is_admin = is_admin
+
+    def __repr__(self):
+        return f'<User {self.email}>'
 
 class Product(db.Model):
     __tablename__ = 'products'
-    id = db.Column('product_id', db.Integer, primary_key=True)
+    id = db.Column('product_id', db.Integer, primary_key=True)  # Match the foreign key reference
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    price = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(50), nullable=True)
-    image = db.Column(db.String(100), nullable=True)
-    discount = db.Column(db.Integer, nullable=True, default=0)
-    stock_quantity = db.Column(db.Integer, nullable=False, default=0)
+    description = db.Column(db.Text)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    image = db.Column(db.String(200))
+    category = db.Column(db.String(50))
+    discount = db.Column(db.Integer, default=0)
+    stock_quantity = db.Column(db.Integer, default=0)
     reviews = db.relationship('Review', backref='product', lazy=True)
-    order_items = db.relationship('OrderItem', backref='product', lazy=True)
 
     def get_discounted_price(self):
+        """Calculate discounted price with proper decimal handling"""
         if self.discount:
-            return self.price * (1 - self.discount/100)
-        return self.price
+            return float(self.price * Decimal(str(1 - self.discount/100)))
+        return float(self.price)
 
     def update_stock(self, quantity):
         if self.stock_quantity >= quantity:
@@ -41,11 +47,14 @@ class Product(db.Model):
             return True
         return False
 
+    def __repr__(self):
+        return f'<Product {self.name}>'
+
 class Review(db.Model):
     __tablename__ = 'reviews'  # Match existing table name
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'), nullable=False)  # Match product_id column
     rating = db.Column(db.Integer, nullable=False)
     review_text = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -73,10 +82,10 @@ class Order(db.Model):
         return self.status.title()
 
 class OrderItem(db.Model):
-    __tablename__ = 'order_item'  # Match existing table name
+    __tablename__ = 'order_items'  # Fix table name
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'), nullable=False)  # Match product_id column
     quantity = db.Column(db.Integer, nullable=False)
     price_at_time = db.Column(db.Float, nullable=False)  # Store price at time of purchase
     discount_at_time = db.Column(db.Integer, nullable=True)  # Store discount at time of purchase
