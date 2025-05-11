@@ -1,0 +1,31 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env
+instance/
+
+# Logs
+logs/
+*.log
+
+# Editors/IDEs
+.vscode/
+
+# Local databases
+*.sqlite
+*.db
+
+# Secrets
+secrets.py
+
+# Static files (if precompiled)
+static/
+
+# OS/IDE files
+.DS_Store
