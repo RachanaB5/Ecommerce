@@ -289,3 +289,6 @@ ALTER TABLE Reviews ADD CONSTRAINT reviews_ibfk_1 FOREIGN KEY (user_id) REFERENC
 ALTER TABLE Payments ADD CONSTRAINT payments_ibfk_1 FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE;
 
 select * from users;
+select * from products;
+select * from orders;
+select * from cart;      
